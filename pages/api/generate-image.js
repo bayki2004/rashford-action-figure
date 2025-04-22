@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const form = formidable({ multiples: false });
+  const form = formidable({ multiples: true });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -38,7 +38,8 @@ export default async function handler(req, res) {
     }
 
     try {
-      const file = Object.values(files)[0][0];
+      const firstKey = Object.keys(files)[0];
+      const file = Array.isArray(files[firstKey]) ? files[firstKey][0] : files[firstKey];
       const buffer = await bufferFile(file.filepath);
       const base64 = buffer.toString("base64");
       const dataUrl = `data:image/jpeg;base64,${base64}`;
