@@ -1,4 +1,4 @@
-const fs = require("fs");
+/*const fs = require("fs");
 const { OpenAI } = require("openai");
 
 export const config = {
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       const dataUrl = `data:image/jpeg;base64,${base64}`;
 
       console.log("🧠 Sending to GPT-4...");
-
+        /*
       const vision = await openai.chat.completions.create({
         model: "gpt-4-turbo",
         messages: [
@@ -59,14 +59,14 @@ export default async function handler(req, res) {
           },
         ],
       });
-
-      const prompt = vision.choices[0].message.content;
-
+      
+      //const prompt = vision.choices[0].message.content;
+      const prompt = "Create an 80s-style plastic action figure from this.";
       console.log("🎨 Prompt from GPT:", prompt);
 
       const imageGen = await openai.images.generate({
         model: "dall-e-3",
-        prompt,
+        ,
         n: 1,
         size: "1024x1024",
       });
@@ -80,4 +80,51 @@ export default async function handler(req, res) {
       res.status(500).json({ error: "Generation failed" });
     }
   });
+}
+*/
+import { OpenAI } from "openai";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export default async function handler(req, res) {
+  console.log("⚡ API hit: /api/generate-image");
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    // Skip image processing, just use a static DALL·E prompt
+    const prompt = `
+    Create a stylized 80s plastic action figure. The character is an adventurous young hero 
+    in a blue polo and khaki shorts, posed heroically inside a collectible blister pack.
+    Add 3 accessories to the right: a futuristic water bottle, a pair of binoculars, and a tiny map scroll.
+    Use bold colors, plastic sheen, and nostalgic packaging design.
+    `;
+
+    console.log("🎯 Sending prompt to DALL·E...");
+
+    const dalleResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const imageUrl = dalleResponse.data[0].url;
+    console.log("✅ DALL·E image URL:", imageUrl);
+
+    res.status(200).json({ imageUrl, prompt });
+  } catch (e) {
+    console.error("❌ DALL·E generation error:", e);
+    res.status(500).json({ error: "Image generation failed" });
+  }
 }
