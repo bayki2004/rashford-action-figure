@@ -12,7 +12,7 @@ export const config = {
 };
 
 // Ensure the uploads directory exists
-const uploadDir = path.join(process.cwd(), 'uploads');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
@@ -23,19 +23,40 @@ export default function handler(req, res) {
     return;
   }
 
-  const form = new formidable.IncomingForm({ uploadDir, keepExtensions: true });
+  
+  const form = new formidable.IncomingForm({
+    keepExtensions: true,
+    maxFileSize: 20 * 1024 * 1024, // 20MB
+    fileWriteStreamHandler: () => {
+      const { Writable } = require('stream');
+      const buffer = [];
+      return new Writable({
+        write(chunk, encoding, callback) {
+          buffer.push(chunk);
+          callback();
+        },
+        final(callback) {
+          this.data = Buffer.concat(buffer);
+          callback();
+        }
+      });
+    }
+  });
 
   form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error("Form error:", err);
+      res.status(500).json({ error: 'Form parsing error' });
+      return;
+    }
+  
     try {
-      if (err) {
-        console.error("Form error:", err);
-        res.status(500).json({ error: 'Form parsing error' });
-        return;
-      }
-
-      const filePath = Object.values(files)[0][0].filepath;
-      const imageBase64 = fs.readFileSync(filePath, { encoding: 'base64' });
+      const file = Object.values(files)[0][0];
+      const imageBuffer = await file.toBuffer(); // <-- important
+      const imageBase64 = imageBuffer.toString('base64');
       const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+      
+      // ...continue with OpenAI Vision call
 
       console.log("Sending image to GPT-4 Vision...");
 
