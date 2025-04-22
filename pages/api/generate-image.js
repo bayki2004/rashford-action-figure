@@ -13,9 +13,7 @@ export const config = {
 
 // Ensure the uploads directory exists
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {
