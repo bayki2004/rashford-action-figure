@@ -35,7 +35,7 @@ const generateActionFigure = async () => {
   
     try {
       console.log("Sending request to /api/generate-image");
-      const response = await fetch("https://rashford-backend-production.up.railway.app/server", {
+      const response = await fetch("https://rashford-backend-production.up.railway.app/generate-image", {
         method: "POST",
         body: formData,
       });
