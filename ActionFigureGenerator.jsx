@@ -35,7 +35,7 @@ const generateActionFigure = async () => {
   
     try {
       console.log("Sending request to /api/generate-image");
-      const response = await fetch("https://rashford-backend-production.up.railway.app/generate-image", {
+      const response = await fetch("https://rashford-backend-production.up.railway.app/server", {
         method: "POST",
         body: formData,
       });
@@ -44,8 +44,8 @@ const generateActionFigure = async () => {
       
       const result = await response.json();
       console.log("Response data:", result);
-      //setGeneratedImage(result.imageUrl);
-      setGeneratedImage(null); // No image, just showing prompt now
+      setGeneratedImage(result.imageUrl);
+      //setGeneratedImage(null); // No image, just showing prompt now
 
       setMessage(result.prompt);
     } catch (err) {
