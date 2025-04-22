@@ -44,7 +44,6 @@ export default async function handler(req, res) {
       const imageBase64 = imageBuffer.toString("base64");
       const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
 
-      console.log("Sending to GPT-4 Vision...");
       const visionResponse = await openai.chat.completions.create({
         model: "gpt-4-turbo",
         messages: [
@@ -63,8 +62,6 @@ export default async function handler(req, res) {
       });
 
       const refinedPrompt = visionResponse.choices[0].message.content?.slice(0, 1000) || "Stylized action figure of this person.";
-
-      console.log("Prompt:", refinedPrompt);
 
       const dalleResponse = await openai.images.generate({
         model: "dall-e-3",
