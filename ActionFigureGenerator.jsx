@@ -44,7 +44,9 @@ const generateActionFigure = async () => {
       
       const result = await response.json();
       console.log("Response data:", result);
-      setGeneratedImage(result.imageUrl);
+      //setGeneratedImage(result.imageUrl);
+      setGeneratedImage(null); // No image, just showing prompt now
+
       setMessage(result.prompt);
     } catch (err) {
       console.error("API call failed:", err);
