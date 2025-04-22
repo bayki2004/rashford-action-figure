@@ -130,7 +130,8 @@ export default async function handler(req, res) {
   }
 }
 */
-import { OpenAI } from "openai";
+const fs = require("fs");
+const { OpenAI } = require("openai");
 
 export const config = {
   api: {
@@ -142,6 +143,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+function bufferFile(filePath) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const stream = fs.createReadStream(filePath);
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+  });
+}
+
 export default async function handler(req, res) {
   console.log("⚡ HIT /api/generate-image");
 
@@ -149,43 +160,47 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  try {
-    const formData = await new Promise((resolve, reject) => {
-      const chunks = [];
-      req.on("data", chunk => chunks.push(chunk));
-      req.on("end", () => resolve(Buffer.concat(chunks)));
-      req.on("error", reject);
-    });
+  const formidable = await import("formidable");
+  const form = formidable.default({ multiples: true });
 
-    const imageBase64 = formData.toString("base64");
-    const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error("🛑 Form parsing failed:", err);
+      return res.status(500).json({ error: "Form parsing failed" });
+    }
 
-    console.log("📤 Sending image to GPT-4...");
+    try {
+      const firstKey = Object.keys(files)[0];
+      const file = Array.isArray(files[firstKey]) ? files[firstKey][0] : files[firstKey];
+      const buffer = await bufferFile(file.filepath);
+      const imageDataUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a creative assistant who describes characters in detail based on photos.",
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Describe this person as an 80s-style plastic action figure inside a blister pack." },
-            { type: "image_url", image_url: { url: imageDataUrl } },
-          ],
-        },
-      ],
-    });
+      console.log("📤 Sending image to GPT-4...");
 
-    const prompt = response.choices[0].message.content;
+      const response = await openai.chat.completions.create({
+        model: "gpt-4-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a creative assistant helping to design toy packaging based on uploaded photos.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Create an 80s-style plastic action figure from this image." },
+              { type: "image_url", image_url: { url: imageDataUrl } },
+            ],
+          },
+        ],
+      });
 
-    console.log("🧠 Prompt from GPT:", prompt);
+      const prompt = response.choices[0].message.content;
+      console.log("🧠 Prompt from GPT:", prompt);
 
-    res.status(200).json({ prompt });
-  } catch (e) {
-    console.error("🔥 Error generating prompt:", e);
-    res.status(500).json({ error: "Prompt generation failed" });
-  }
+      res.status(200).json({ prompt });
+    } catch (e) {
+      console.error("🔥 Error during GPT-4 generation:", e);
+      res.status(500).json({ error: "Prompt generation failed" });
+    }
+  });
 }
