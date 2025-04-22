@@ -23,29 +23,36 @@ export default function ActionFigureGenerator() {
     const files = Array.from(e.target.files).filter(file => file.type.startsWith("image/"));
     setImages(files);
   };
-
-  const generateActionFigure = async () => {
+  // Client-side debugging
+const generateActionFigure = async () => {
     setLoading(true);
     setMessage("");
     const formData = new FormData();
     images.forEach((image, index) => {
+      console.log(`Adding image ${index} to form data:`, image.name, image.type, image.size);
       formData.append(`image_${index}`, image);
     });
-
+  
     try {
+      console.log("Sending request to /api/generate-image");
       const response = await fetch("/api/generate-image", {
         method: "POST",
         body: formData,
       });
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries([...response.headers]));
+      
       const result = await response.json();
+      console.log("Response data:", result);
       setGeneratedImage(result.imageUrl);
       setMessage(result.prompt);
     } catch (err) {
       console.error("API call failed:", err);
-      setMessage("Error generating image.");
+      setMessage("Error generating image: " + err.message);
     }
     setLoading(false);
   };
+
 
   const orderActionFigure = async () => {
     setLoading(true);

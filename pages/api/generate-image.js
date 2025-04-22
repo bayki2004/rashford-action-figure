@@ -1,6 +1,8 @@
-const fs = require("fs");
-const formidable = require("formidable");
-const { OpenAI } = require("openai");
+// app/api/generate-image/route.js
+import { NextResponse } from 'next/server';
+import fs from 'fs';
+import formidable from 'formidable';
+import { OpenAI } from 'openai';
 
 export const config = {
   api: {
@@ -22,75 +24,59 @@ function fsReadStreamToBuffer(path) {
   });
 }
 
-export default async function handler(req, res) {
+export async function POST(req) {
   console.log("📩 API hit: /api/generate-image");
-  console.log("📬 Request method:", req.method);
-
-  if (req.method !== "POST") {
-    console.log("❌ Invalid method");
-    return res.status(405).json({ error: "Method not allowed" });
+  
+  // Parse form data
+  const formData = await req.formData();
+  const file = formData.get('image_0');
+  
+  if (!file) {
+    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
-
-  console.log("📦 Parsing form...");
-
-  const form = formidable({
-    maxFileSize: 20 * 1024 * 1024, // 20MB
-    multiples: true,
-  });
-
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error("🛑 Form parsing error:", err);
-      return res.status(500).json({ error: "Form parsing error" });
-    }
-
-    console.log("🧾 Parsed fields:", fields);
-    console.log("🖼️ Parsed files:", Object.keys(files));
-
-    try {
-      const file = Object.values(files)[0][0];
-      const imageBuffer = await fsReadStreamToBuffer(file.filepath);
-      const imageBase64 = imageBuffer.toString("base64");
-      const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
-
-      console.log("🚀 Sending image to GPT-4 Vision...");
-
-      const visionResponse = await openai.chat.completions.create({
-        model: "gpt-4-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are a creative assistant helping to design toy packaging based on uploaded photos.",
-          },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Create a stylized plastic action figure of the person shown in the photo." },
-              { type: "image_url", image_url: { url: imageDataUrl } },
-            ],
-          },
-        ],
-      });
-
-      const refinedPrompt = visionResponse.choices[0].message.content?.slice(0, 1000) || "Stylized action figure of the person shown.";
-
-      console.log("🎯 GPT-4 returned prompt:", refinedPrompt);
-
-      const dalleResponse = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: refinedPrompt,
-        n: 1,
-        size: "1024x1024",
-      });
-
-      const imageUrl = dalleResponse.data[0].url;
-
-      console.log("✅ DALL·E generated image:", imageUrl);
-
-      res.status(200).json({ imageUrl, prompt: refinedPrompt });
-    } catch (e) {
-      console.error("🔥 Error during generation:", e);
-      res.status(500).json({ error: "Image generation failed" });
-    }
-  });
+  
+  try {
+    // Convert file to buffer and base64
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const imageBase64 = buffer.toString("base64");
+    const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+    
+    console.log("🚀 Sending image to GPT-4 Vision...");
+    const visionResponse = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a creative assistant helping to design toy packaging based on uploaded photos.",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Create a stylized plastic action figure of the person shown in the photo." },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+    });
+    
+    const refinedPrompt = visionResponse.choices[0].message.content?.slice(0, 1000) || 
+      "Stylized action figure of the person shown.";
+    console.log("🎯 GPT-4 returned prompt:", refinedPrompt);
+    
+    const dalleResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: refinedPrompt,
+      n: 1,
+      size: "1024x1024",
+    });
+    
+    const imageUrl = dalleResponse.data[0].url;
+    console.log("✅ DALL·E generated image:", imageUrl);
+    
+    return NextResponse.json({ imageUrl, prompt: refinedPrompt });
+  } catch (e) {
+    console.error("🔥 Error during generation:", e);
+    return NextResponse.json({ error: "Image generation failed" }, { status: 500 });
+  }
 }
