@@ -82,6 +82,7 @@ export default async function handler(req, res) {
   });
 }
 */
+/*
 import { OpenAI } from "openai";
 
 export const config = {
@@ -126,5 +127,65 @@ export default async function handler(req, res) {
   } catch (e) {
     console.error("❌ DALL·E generation error:", e);
     res.status(500).json({ error: "Image generation failed" });
+  }
+}
+*/
+import { OpenAI } from "openai";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export default async function handler(req, res) {
+  console.log("⚡ HIT /api/generate-image");
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const formData = await new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on("data", chunk => chunks.push(chunk));
+      req.on("end", () => resolve(Buffer.concat(chunks)));
+      req.on("error", reject);
+    });
+
+    const imageBase64 = formData.toString("base64");
+    const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+
+    console.log("📤 Sending image to GPT-4...");
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a creative assistant who describes characters in detail based on photos.",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this person as an 80s-style plastic action figure inside a blister pack." },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+    });
+
+    const prompt = response.choices[0].message.content;
+
+    console.log("🧠 Prompt from GPT:", prompt);
+
+    res.status(200).json({ prompt });
+  } catch (e) {
+    console.error("🔥 Error generating prompt:", e);
+    res.status(500).json({ error: "Prompt generation failed" });
   }
 }
