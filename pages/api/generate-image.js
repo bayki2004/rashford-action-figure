@@ -1,4 +1,6 @@
+const formidable = require("formidable");
 const { OpenAI } = require("openai");
+const fs = require("fs");
 
 export const config = {
   api: {
@@ -10,53 +12,71 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+function bufferFile(filePath) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const stream = fs.createReadStream(filePath);
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+  });
+}
+
 export default async function handler(req, res) {
   console.log("📩 HIT /api/generate-image");
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  try {
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", async () => {
-      const buffer = Buffer.concat(chunks);
+  const form = formidable({ multiples: false });
 
-      const imageBase64 = buffer.toString("base64");
-      const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error("🛑 Form parse error:", err);
+      return res.status(500).json({ error: "Form parse failed" });
+    }
 
-      const visionResponse = await openai.chat.completions.create({
+    try {
+      const file = Object.values(files)[0][0];
+      const buffer = await bufferFile(file.filepath);
+      const base64 = buffer.toString("base64");
+      const dataUrl = `data:image/jpeg;base64,${base64}`;
+
+      console.log("🧠 Sending to GPT-4...");
+
+      const vision = await openai.chat.completions.create({
         model: "gpt-4-turbo",
         messages: [
-          {
-            role: "system",
-            content: "You are a creative assistant helping to design toy packaging based on uploaded photos.",
-          },
+          { role: "system", content: "Describe this image as a stylized action figure." },
           {
             role: "user",
             content: [
-              { type: "text", text: "Create a stylized action figure of this person." },
-              { type: "image_url", image_url: { url: imageDataUrl } },
+              { type: "text", text: "Create an 80s-style plastic action figure from this." },
+              { type: "image_url", image_url: { url: dataUrl } },
             ],
           },
         ],
       });
 
-      const prompt = visionResponse.choices[0].message.content;
+      const prompt = vision.choices[0].message.content;
 
-      const dalleResponse = await openai.images.generate({
+      console.log("🎨 Prompt from GPT:", prompt);
+
+      const imageGen = await openai.images.generate({
         model: "dall-e-3",
         prompt,
         n: 1,
         size: "1024x1024",
       });
 
-      const imageUrl = dalleResponse.data[0].url;
-      return res.status(200).json({ imageUrl, prompt });
-    });
-  } catch (e) {
-    console.error("🔥 ERROR:", e);
-    return res.status(500).json({ error: "Failed to generate image." });
-  }
+      const imageUrl = imageGen.data[0].url;
+
+      console.log("✅ Image generated:", imageUrl);
+      res.status(200).json({ imageUrl, prompt });
+    } catch (e) {
+      console.error("🔥 Generation failed:", e);
+      res.status(500).json({ error: "Generation failed" });
+    }
+  });
 }
