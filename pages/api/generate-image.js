@@ -1,6 +1,5 @@
-const formidable = require("formidable");
-const { OpenAI } = require("openai");
 const fs = require("fs");
+const { OpenAI } = require("openai");
 
 export const config = {
   api: {
@@ -29,7 +28,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const form = formidable({ multiples: true });
+  const formidable = await import("formidable"); // ✅ use dynamic import to fix Vercel ESM bundling
+  const form = formidable.default({ multiples: true }); // ⬅️ MUST use `.default`
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
