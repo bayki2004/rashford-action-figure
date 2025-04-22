@@ -23,11 +23,15 @@ function fsReadStreamToBuffer(path) {
 }
 
 export default async function handler(req, res) {
-  console.log("📩 Request method:", req.method);
+  console.log("📩 API hit: /api/generate-image");
+  console.log("📬 Request method:", req.method);
 
   if (req.method !== "POST") {
+    console.log("❌ Invalid method");
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  console.log("📦 Parsing form...");
 
   const form = formidable({
     maxFileSize: 20 * 1024 * 1024, // 20MB
