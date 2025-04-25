@@ -10,6 +10,7 @@ module.exports = {
   ],
   safelist: [
     'bg-orange-50',
+    'bg-yellow-50',
     'text-orange-700',
     'border-orange-400',
     'hover:border-orange-500'
