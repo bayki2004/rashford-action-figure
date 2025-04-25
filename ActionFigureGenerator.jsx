@@ -74,8 +74,29 @@ export default function ActionFigureGenerator() {
         className="w-[26rem] h-60 border-4 border-dashed border-orange-400 rounded-2xl flex flex-col justify-center items-center text-orange-700 bg-white shadow-md hover:border-orange-500 cursor-pointer transition duration-200"
         onClick={() => fileInputRef.current.click()}
       >
-        <p className="text-lg font-medium">Drag & drop images here</p>
-        <p className="text-sm text-orange-500">or click to upload</p>
+        {images.length === 0 ? (
+  <>
+    <p className="text-lg font-medium">Drag & drop images here</p>
+    <p className="text-sm text-orange-500">or click to upload</p>
+  </>
+) : (
+  <div className="flex flex-col items-center space-y-2">
+    <p className="text-lg font-semibold text-orange-700">
+      {images.length} image{images.length > 1 ? "s" : ""} selected
+    </p>
+    <div className="flex gap-2 flex-wrap justify-center">
+      {images.map((img, idx) => (
+        <img
+          key={idx}
+          src={URL.createObjectURL(img)}
+          alt={`preview-${idx}`}
+          className="w-16 h-16 object-cover rounded shadow"
+        />
+      ))}
+    </div>
+  </div>
+)}
+
         <input
           type="file"
           multiple
