@@ -29,8 +29,8 @@ module.exports = {
           800: gray[800],
         },
         yellow: {
-          50: "#FFFBEA", // Light yellowish background
-          500: yellow[500],
+          50: colors.yellow[50], // Light yellowish background
+          500: colors.yellow[500],
         },
         white: white,
       },
