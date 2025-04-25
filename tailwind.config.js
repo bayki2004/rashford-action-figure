@@ -28,9 +28,13 @@ module.exports = {
           800: gray[800],
         },
         yellow: {
+          50: "#FFFBEA", // Light yellowish background
           500: yellow[500],
         },
         white: white,
+      },
+      fontFamily: {
+        sans: ['"Poppins"', 'sans-serif'], // Add a nice font like Poppins
       },
     },
   },
