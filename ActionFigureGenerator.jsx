@@ -67,6 +67,18 @@ export default function ActionFigureGenerator() {
       <h1 className="text-5xl font-extrabold text-orange-600 drop-shadow-md text-center">
         Generate your own action figure!
       </h1>
+      <div className="max-w-2xl text-center text-gray-600 text-lg mt-2 space-y-4">
+  <p>
+    Hey there! Have you ever wanted your own little action figure, or are you just looking to toy around with magical AI? Use the drag-and-drop box below to test it out:
+  </p>
+  <ol className="list-decimal list-inside text-left mx-auto max-w-md">
+    <li>Drag your photo into the field below</li>
+    <li>Press <em>Generate</em></li>
+    <li>You're already done – voila, your own action figure!</li>
+  </ol>
+</div>
+
+
 
       <div
         onDrop={handleDrop}
