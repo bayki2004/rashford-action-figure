@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 
-const { orange, gray, white, yellow } = require('tailwindcss/colors');
+const colors = require('tailwindcss/colors');
 
 module.exports = {
   content: [
@@ -10,7 +10,7 @@ module.exports = {
   ],
   safelist: [
     'bg-orange-50',
-    'bg-yellow-50',
+    'bg-yellow-50', // ✅ fix: safelist bg-yellow-50
     'text-orange-700',
     'border-orange-400',
     'hover:border-orange-500'
@@ -19,23 +19,23 @@ module.exports = {
     extend: {
       colors: {
         orange: {
-          50: orange[50],
-          100: orange[100],
-          400: orange[400],
-          500: orange[500],
-          700: orange[700],
-        },
-        gray: {
-          800: gray[800],
+          50: colors.orange[50],
+          100: colors.orange[100],
+          400: colors.orange[400],
+          500: colors.orange[500],
+          700: colors.orange[700],
         },
         yellow: {
-          50: colors.yellow[50], // Light yellowish background
+          50: colors.yellow[50], // ✅ use official Tailwind yellow
           500: colors.yellow[500],
         },
-        white: white,
+        gray: {
+          800: colors.gray[800],
+        },
+        white: colors.white,
       },
       fontFamily: {
-        sans: ['"Poppins"', 'sans-serif'], // Add a nice font like Poppins
+        sans: ['"Poppins"', 'sans-serif'],
       },
     },
   },
