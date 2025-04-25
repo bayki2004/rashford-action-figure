@@ -63,7 +63,7 @@ export default function ActionFigureGenerator() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-100 p-8 space-y-8 font-sans text-gray-800">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-8 space-y-8 font-sans text-gray-800">
       <h1 className="text-5xl font-extrabold text-orange-600 drop-shadow-md text-center">
         Generate your own action figure!
       </h1>
