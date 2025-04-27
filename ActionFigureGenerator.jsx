@@ -7,6 +7,14 @@ export default function ActionFigureGenerator() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [title, setTitle] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [subTitle, setSubTitle] = useState("");
+  const [item1, setItem1] = useState("");
+  const [item2, setItem2] = useState("");
+  const [item3, setItem3] = useState("");
+
   const fileInputRef = useRef(null);
 
   const handleDrop = (e) => {
@@ -31,6 +39,14 @@ export default function ActionFigureGenerator() {
     images.forEach((image, index) => {
       formData.append(`image_${index}`, image);
     });
+
+    // Append all fields
+    formData.append("title", title);
+    formData.append("firstName", firstName);
+    formData.append("subTitle", subTitle);
+    formData.append("item1", item1);
+    formData.append("item2", item2);
+    formData.append("item3", item3);
 
     try {
       const response = await fetch("https://rashford-backend-production.up.railway.app/generate-image", {
@@ -67,19 +83,30 @@ export default function ActionFigureGenerator() {
       <h1 className="text-5xl font-extrabold text-orange-600 drop-shadow-md text-center">
         Generate your own action figure!
       </h1>
+
+      {/* Short paragraph */}
       <div className="max-w-2xl text-center text-gray-600 text-lg mt-2 space-y-4">
-  <p>
-    Hey there! Have you ever wanted your own little action figure, or are you just looking to toy around with magical AI? Use the drag-and-drop box below to test it out:
-  </p>
-  <ol className="list-decimal list-inside text-left mx-auto max-w-md">
-    <li>Drag your photo into the field below</li>
-    <li>Press <em>Generate</em></li>
-    <li>You're already done – voila, your own action figure!</li>
-  </ol>
-</div>
+        <p>
+          Hey there! Have you ever wanted your own little action figure, or are you just looking to toy around with magical AI? Use the drag-and-drop box below to test it out:
+        </p>
+        <ol className="list-decimal list-inside text-left mx-auto max-w-md">
+          <li>Drag your photo into the field below</li>
+          <li>Press <em>Generate</em></li>
+          <li>You're already done – voila, your own action figure!</li>
+        </ol>
+      </div>
 
+      {/* Text fields */}
+      <div className="grid grid-cols-1 gap-4 max-w-md w-full">
+        <input type="text" placeholder="Main Title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input type="text" placeholder="Name" className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        <input type="text" placeholder="Subtitle" className="input" value={subTitle} onChange={(e) => setSubTitle(e.target.value)} />
+        <input type="text" placeholder="Item 1" className="input" value={item1} onChange={(e) => setItem1(e.target.value)} />
+        <input type="text" placeholder="Item 2" className="input" value={item2} onChange={(e) => setItem2(e.target.value)} />
+        <input type="text" placeholder="Item 3" className="input" value={item3} onChange={(e) => setItem3(e.target.value)} />
+      </div>
 
-
+      {/* Drag and Drop */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -87,28 +114,27 @@ export default function ActionFigureGenerator() {
         onClick={() => fileInputRef.current.click()}
       >
         {images.length === 0 ? (
-  <>
-    <p className="text-lg font-medium">Drag & drop images here</p>
-    <p className="text-sm text-orange-500">or click to upload</p>
-  </>
-) : (
-  <div className="flex flex-col items-center space-y-2">
-    <p className="text-lg font-semibold text-orange-700">
-      {images.length} image{images.length > 1 ? "s" : ""} selected
-    </p>
-    <div className="flex gap-2 flex-wrap justify-center">
-      {images.map((img, idx) => (
-        <img
-          key={idx}
-          src={URL.createObjectURL(img)}
-          alt={`preview-${idx}`}
-          className="w-16 h-16 object-cover rounded shadow"
-        />
-      ))}
-    </div>
-  </div>
-)}
-
+          <>
+            <p className="text-lg font-medium">Drag & drop images here</p>
+            <p className="text-sm text-orange-500">or click to upload</p>
+          </>
+        ) : (
+          <div className="flex flex-col items-center space-y-2">
+            <p className="text-lg font-semibold text-orange-700">
+              {images.length} image{images.length > 1 ? "s" : ""} selected
+            </p>
+            <div className="flex gap-2 flex-wrap justify-center">
+              {images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={URL.createObjectURL(img)}
+                  alt={`preview-${idx}`}
+                  className="w-16 h-16 object-cover rounded shadow"
+                />
+              ))}
+            </div>
+          </div>
+        )}
         <input
           type="file"
           multiple
@@ -119,6 +145,7 @@ export default function ActionFigureGenerator() {
         />
       </div>
 
+      {/* Buttons */}
       <div className="flex flex-wrap justify-center gap-4 mt-2">
         <Button onClick={generateActionFigure} disabled={loading || images.length === 0}>
           Generate
