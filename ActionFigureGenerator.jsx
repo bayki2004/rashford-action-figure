@@ -111,6 +111,7 @@ export default function ActionFigureGenerator() {
           <li>Fill out the fields below</li>
           <li>Drag your photo into the field below</li>
           <li>Press <em>Generate</em></li>
+          <li>Get a coffee</li>
           <li>Choose your favorite!</li>
         </ol>
       </div>
