@@ -3,18 +3,20 @@ import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 
 export default function ActionFigureGenerator() {
+  const [formInputs, setFormInputs] = useState({
+    title: "",
+    name: "",
+    subtitle: "",
+    item1: "",
+    item2: "",
+    item3: "",
+  });
   const [images, setImages] = useState([]);
-  const [generatedImage, setGeneratedImage] = useState(null);
+  const [generatedImages, setGeneratedImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
-  const [title, setTitle] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [subTitle, setSubTitle] = useState("");
-  const [item1, setItem1] = useState("");
-  const [item2, setItem2] = useState("");
-  const [item3, setItem3] = useState("");
-
   const fileInputRef = useRef(null);
 
   const handleDrop = (e) => {
@@ -32,21 +34,25 @@ export default function ActionFigureGenerator() {
     setImages(files);
   };
 
-  const generateActionFigure = async () => {
+  const handleInputChange = (e) => {
+    setFormInputs({ ...formInputs, [e.target.name]: e.target.value });
+  };
+
+  const generateActionFigures = async () => {
+    if (images.length === 0) return;
+
     setLoading(true);
     setMessage("");
+    setGeneratedImages([]);
     const formData = new FormData();
     images.forEach((image, index) => {
       formData.append(`image_${index}`, image);
     });
 
-    // Append all fields
-    formData.append("title", title);
-    formData.append("firstName", firstName);
-    formData.append("subTitle", subTitle);
-    formData.append("item1", item1);
-    formData.append("item2", item2);
-    formData.append("item3", item3);
+    // Attach text inputs
+    Object.entries(formInputs).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
       const response = await fetch("https://rashford-backend-production.up.railway.app/generate-image", {
@@ -54,27 +60,40 @@ export default function ActionFigureGenerator() {
         body: formData,
       });
       const result = await response.json();
-      setGeneratedImage(result.imageUrl);
-      setMessage(result.prompt);
+      if (result.imagesBase64) {
+        setGeneratedImages(result.imagesBase64);
+      } else {
+        setMessage("No images returned.");
+      }
     } catch (err) {
-      setMessage("Error generating image: " + err.message);
+      setMessage("Error generating images: " + err.message);
     }
     setLoading(false);
   };
 
   const orderActionFigure = async () => {
-    setLoading(true);
-    const response = await fetch("/api/generate-3d-file", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl: generatedImage }),
-    });
-
-    if (response.ok) {
-      setMessage("Action figure ordered!");
-    } else {
-      setMessage("Failed to order the action figure.");
+    if (!selectedImage) {
+      alert("Please select an image first!");
+      return;
     }
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/generate-3d-file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: selectedImage }),
+      });
+
+      if (response.ok) {
+        setMessage("Action figure ordered!");
+      } else {
+        setMessage("Failed to order the action figure.");
+      }
+    } catch (err) {
+      setMessage("Error ordering figure: " + err.message);
+    }
+
     setLoading(false);
   };
 
@@ -84,29 +103,34 @@ export default function ActionFigureGenerator() {
         Generate your own action figure!
       </h1>
 
-      {/* Short paragraph */}
       <div className="max-w-2xl text-center text-gray-600 text-lg mt-2 space-y-4">
         <p>
           Hey there! Have you ever wanted your own little action figure, or are you just looking to toy around with magical AI? Use the drag-and-drop box below to test it out:
         </p>
         <ol className="list-decimal list-inside text-left mx-auto max-w-md">
+          <li>Fill out the fields below</li>
           <li>Drag your photo into the field below</li>
           <li>Press <em>Generate</em></li>
-          <li>You're already done – voila, your own action figure!</li>
+          <li>Choose your favorite!</li>
         </ol>
       </div>
 
-      {/* Text fields */}
-      <div className="grid grid-cols-1 gap-4 max-w-md w-full">
-        <input type="text" placeholder="Main Title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input type="text" placeholder="Name" className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        <input type="text" placeholder="Subtitle" className="input" value={subTitle} onChange={(e) => setSubTitle(e.target.value)} />
-        <input type="text" placeholder="Item 1" className="input" value={item1} onChange={(e) => setItem1(e.target.value)} />
-        <input type="text" placeholder="Item 2" className="input" value={item2} onChange={(e) => setItem2(e.target.value)} />
-        <input type="text" placeholder="Item 3" className="input" value={item3} onChange={(e) => setItem3(e.target.value)} />
+      {/* Form Inputs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+        {["title", "name", "subtitle", "item1", "item2", "item3"].map((field) => (
+          <input
+            key={field}
+            type="text"
+            name={field}
+            value={formInputs[field]}
+            onChange={handleInputChange}
+            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+            className="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+        ))}
       </div>
 
-      {/* Drag and Drop */}
+      {/* Drag and Drop Box */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -145,36 +169,56 @@ export default function ActionFigureGenerator() {
         />
       </div>
 
-      {/* Buttons */}
+      {/* Generate Button */}
       <div className="flex flex-wrap justify-center gap-4 mt-2">
-        <Button onClick={generateActionFigure} disabled={loading || images.length === 0}>
+        <Button onClick={generateActionFigures} disabled={loading || images.length === 0}>
           Generate
-        </Button>
-        <Button onClick={generateActionFigure} disabled={loading || !generatedImage}>
-          Regenerate
-        </Button>
-        <Button onClick={orderActionFigure} disabled={loading || !generatedImage}>
-          Order
         </Button>
       </div>
 
-      {loading && <p className="text-orange-600 text-lg font-medium animate-pulse">Loading your action figure...</p>}
+      {/* Generated Images */}
+      {/* Generated Images */}
+{generatedImages.length > 0 && (
+  <div className="flex flex-wrap justify-center gap-6 mt-6">
+    {generatedImages.map((img, idx) => (
+      <div
+        key={idx}
+        onClick={() =>
+          setSelectedImage((prev) =>
+            prev && prev.includes(img)
+              ? prev.filter((i) => i !== img)
+              : [...(prev || []), img]
+          )
+        }
+        className={`cursor-pointer rounded-lg border-4 ${
+          selectedImage && selectedImage.includes(img)
+            ? "border-orange-400"
+            : "border-transparent"
+        } hover:border-orange-300 p-1 transition`}
+      >
+        <img
+          src={`data:image/png;base64,${img}`}
+          alt={`generated-${idx}`}
+          className="w-72 h-auto object-contain rounded-lg shadow-md"
+        />
+      </div>
+    ))}
+  </div>
+)}
 
-      {generatedImage && (
-        <Card className="bg-white shadow-xl rounded-xl border border-orange-200">
-          <CardContent className="flex justify-center p-4">
-            <img
-              src={generatedImage}
-              alt="Generated Action Figure"
-              className="w-full max-w-md rounded-lg object-cover"
-            />
-          </CardContent>
-        </Card>
+
+      {/* Order Button */}
+      {selectedImage && (
+        <div className="flex justify-center mt-6">
+          <Button onClick={orderActionFigure} disabled={loading}>
+            Order Selected
+          </Button>
+        </div>
       )}
 
+      {loading && <p className="text-orange-600 text-lg font-medium animate-pulse mt-4">Loading your action figure...</p>}
       {message && (
         <div className="max-w-2xl mt-4 p-4 bg-white border shadow rounded text-sm whitespace-pre-line text-gray-800">
-          <h3 className="font-bold mb-2 text-orange-700">Prompt used:</h3>
           {message}
         </div>
       )}
