@@ -84,30 +84,53 @@ export default function ActionFigureGenerator() {
 
   return (
     <div className="min-h-screen bg-yellow-200 text-gray-800 p-6 font-sans">
+      <header className="w-full flex justify-start items-center px-6 py-4">
+  <img
+    src="/aitoons-logo.png"
+    alt="AIToons Logo"
+    className="w-40 h-auto"
+  />
+</header>
+
       <header className="text-center space-y-4 mb-8">
+      <h1 className="text-center font-extrabold text-purple-600 drop-shadow-lg leading-[1.1] text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] tracking-tight max-w-5xl mx-auto">
+  Imagine yourself<br />
+  as an <span className="text-orange-500">Action Figure!</span>
+</h1>
+
         <img
           src="/starter-pack-banner.png"
           alt="Starter Pack Hero"
           className="mx-auto w-full max-w-4xl rounded-lg shadow-lg"
         />
-        <h1 className="text-6xl font-extrabold text-purple-700 drop-shadow-lg">
-          Imagine yourself as an Action Figure
-        </h1>
-        <p className="max-w-2xl mx-auto text-lg font-medium text-gray-700">
-          Upload a photo, name your pack, pick your mini items — and watch AI bring your personal collectible to life!
-        </p>
-        <ol className="list-decimal list-inside text-left max-w-xl mx-auto mt-4 text-sm text-gray-700 space-y-1">
+        <h3 className="text-center text-xl sm:text-2xl font-semibold text-purple-600 mt-4">
+  Create your own personalized action figure toy with our AI-powered generator
+</h3>
+<p className="text-center text-lg sm:text-xl font-semibold text-orange-600 mt-4 max-w-3xl mx-auto">
+  You will receive your very own custom action figure toy delivered to your doorstep! Once we receive your order we will deliver your custom action figure toy to your doorstep. Play around with the generator and see what you can create! 
+</p>
+
+<h3 className="text-center text-xl sm:text-2xl font-semibold text-purple-600 mt-4">
+  Let's get started!
+</h3>
+<h4 className="text-center text-lg sm:text-xl font-semibold text-orange-600 mt-4">
+  The process is simple: Strike a pose, pick three items to accompany you and you're good to go. Have Fun :-)
+</h4>
+    
+        <ol className="list-decimal list-inside text-center max-w-xl mx-auto mt-4 text-sm text-gray-700 space-y-1">
           <li>Fill out the fields</li>
           <li>Upload or drag a photo</li>
           <li>Click <em>Generate</em></li>
+          <li>Wait for the magic to happen or get a coffee</li>
           <li>Select the ones you like</li>
           <li>Press <strong>Order</strong> and check out!</li>
+
         </ol>
       </header>
 
       {/* Input Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
-        {["title", "name", "subtitle", "item1", "item2", "item3"].map((field) => (
+        {["title", "item1", "name", "item2", "subtitle", "item3"].map((field) => (
           <input
             key={field}
             name={field}
@@ -210,7 +233,7 @@ export default function ActionFigureGenerator() {
 
 <div className="w-full max-w-7xl px-6 mt-16 mx-auto">
   <h2 className="text-3xl font-extrabold text-center text-purple-700 mb-8">
-    Example Action Figures
+    Gallery
   </h2>
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
     {[
