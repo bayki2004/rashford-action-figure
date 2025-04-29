@@ -72,30 +72,31 @@ export default function ActionFigureGenerator() {
   };
 
   const orderActionFigure = async () => {
-    if (!selectedImage) {
-      alert("Please select an image first!");
+    if (!selectedImage || selectedImage.length === 0) {
+      alert("Please select at least one image to order.");
       return;
     }
+  
     setLoading(true);
-
     try {
-      const response = await fetch("/api/generate-3d-file", {
+      const response = await fetch("https://rashford-backend-production.up.railway.app/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: selectedImage }),
+        body: JSON.stringify({ imageBase64s: selectedImage }),
       });
-
-      if (response.ok) {
-        setMessage("Action figure ordered!");
+  
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        setMessage("Failed to order the action figure.");
+        setMessage("Could not start checkout.");
       }
     } catch (err) {
-      setMessage("Error ordering figure: " + err.message);
+      setMessage("Error starting checkout: " + err.message);
     }
-
     setLoading(false);
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-8 space-y-8 font-sans text-gray-800">
